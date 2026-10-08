@@ -112,3 +112,16 @@ git clone https://github.com/<owner>/<repo>.git <空目录>
 **根治办法（本项目已采用）**：任何"库内目录名 / 本机路径 / 凭据"都**不要写进代码**，
 一律走配置项（`<vault>/.dsh/settings.json`）或环境变量 —— 代码与文档里只留通用默认值。
 这样"发布树是否干净"就不再依赖每次手工扫描。
+## 八、Social preview 卡片图（分享时显示的图）
+
+仓库右上 Settings → **Social preview** 可上传一张 1280×640（2:1，≤1MB）的卡片，
+它决定这个链接被贴到别处时显示什么图。**卡片是脚本生成的，不要手绘**：
+
+```powershell
+# 依赖 Pillow（DSH 自带 Python 已装）；产物 = docs/social-preview.png
+python tools/make-social-preview.py
+```
+
+脚本里踩过并修掉的坑值得记住：**Segoe UI 这类西文字体没有 CJK 字形**，
+用它画含中文的字符串会出**豆腐块**（□□□）—— 规则是「**字符串里只要有中文就用雅黑**」，
+纯西文才用 Segoe UI（脚本里的 `pick()` 就是干这个的）。改完务必**亲眼看一遍产物**再上传。
