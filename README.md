@@ -120,7 +120,7 @@ GET  /api/evolution/archive     已完成（归档）的任务
 ├── client-plugin/      # DSH 面板插件
 ├── obsidian-plugin/    # dsh-bridge（Obsidian 插件）
 ├── tools/              # 部署 / 自启脚本（安装用）
-└── docs/               # 架构、会话导入、打包清单、变更记录
+└── docs/               # 架构、打包清单、发布流程、会话导入、变更记录
 ```
 
 ## 隐私
@@ -255,7 +255,7 @@ GET  /api/evolution/archive     Finished (archived) tasks
 ├── client-plugin/      # DSH panel plugin
 ├── obsidian-plugin/    # dsh-bridge (Obsidian plugin)
 ├── tools/              # deploy / autostart scripts (for installation)
-└── docs/               # architecture, session import, packaging checklist, changelog
+└── docs/               # architecture, packaging, publishing, session import, changelog
 ```
 
 ## Privacy

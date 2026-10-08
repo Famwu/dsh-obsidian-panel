@@ -156,3 +156,45 @@ $h = curl.exe -s -A "Mozilla/5.0" https://github.com/<owner>/<repo>
 装饰性图形（面板示意）放到安全带**之外**并降低不透明度 —— 被裁掉不影响信息。
 `tools/make-social-preview.py` 会**逐元素断言**包围盒落在安全带内，越界直接报错退出（不靠肉眼）。
 改完仍要**亲眼看一遍** 2:1 与 1:1 两种裁切。
+---
+
+## English (condensed)
+
+**Prerequisites**
+
+- A GitHub token with `public_repo` (classic) or `Contents: Read and write` (fine-grained), stored as a single line
+  in `%USERPROFILE%\.dsh\gh-token.txt`. **Never paste a token into chat or into any repository file.**
+- On this machine `github.com:443` is unstable over a direct connection, so `git push` must go through the local
+  proxy (`socks5h://127.0.0.1:10808`) with the credential **embedded in that single command** — Bearer headers do
+  *not* work for HTTPS pushes. `api.github.com` (repo creation, Releases) works directly and needs no proxy.
+
+**One-command publish**
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/push-release.ps1 -DryRun            # dry run first
+powershell -ExecutionPolicy Bypass -File tools/push-release.ps1 -Tag v<x.y.z>      # for real
+```
+
+It reads the token from the file (never echoing it), verifies your identity, creates the repository if it does not
+exist, pushes `main`, pushes the tag, and creates a Release whose body is extracted from the changelog.
+
+**After publishing — three mandatory checks** (see §7 for the story behind them)
+
+1. Scan the **current tree** for the 9 classes (see `PACKAGING.md`) → must be 0 hits.
+2. Scan the **full history**: `git log --all -p -S"<sensitive>" --oneline` → must be 0 hits.
+3. **Anonymous clone** into an empty directory and re-run ① and ② inside the clone — that is what the outside sees.
+
+**Social preview card** — `python tools/make-social-preview.py` regenerates `docs/social-preview.png`
+(1280×640, centre-safe composition with a per-element assertion). Upload it in **Settings → Social preview**.
+To verify it is live, check that the page's `og:image` points at
+`repository-images.githubusercontent.com/<repo_id>/<uuid>` (your custom card) rather than
+`opengraph.githubassets.com/<hash>/...` (GitHub's auto-generated card). See §8.
+
+**If something goes wrong**
+
+- Wrong content in the repository: fix it and push again. If the leak is already in **history**, rewrite history
+  (force push) — tags and Releases are separate objects and must be handled too; the only way to also purge
+  GitHub's unreachable objects is to **delete and recreate the repository**.
+- To withdraw a Release: delete it on GitHub (keep or delete the tag as you prefer).
+- Deploy rollback: the source repository keeps its history; `tools/rollback.ps1` can restore a baseline
+  (requires `-Vault`).
