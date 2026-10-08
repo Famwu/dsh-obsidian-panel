@@ -125,3 +125,23 @@ python tools/make-social-preview.py
 脚本里踩过并修掉的坑值得记住：**Segoe UI 这类西文字体没有 CJK 字形**，
 用它画含中文的字符串会出**豆腐块**（□□□）—— 规则是「**字符串里只要有中文就用雅黑**」，
 纯西文才用 Segoe UI（脚本里的 `pick()` 就是干这个的）。改完务必**亲眼看一遍产物**再上传。
+### 怎么确认卡片**真的生效了**（2026-10-09 绕了三圈才验对，务必按这个判据）
+
+抓仓库页 HTML，看 `og:image`：**它指向哪个域名，就是哪种卡**——
+
+| `og:image` 指向 | 含义 |
+|---|---|
+| `opengraph.githubassets.com/<hash>/<owner>/<repo>` | **GitHub 自动生成**的默认卡（仓库名 + 描述 + 统计数字）⇒ **自定义卡片没生效** |
+| `repository-images.githubusercontent.com/<repo_id>/<uuid>` | **你上传的自定义卡** ⇒ 生效 ✓ |
+
+```powershell
+# 一句话取当前 og:image（HTML 里斜杠未转义，直接正则可取）
+$h = curl.exe -s -A "Mozilla/5.0" https://github.com/<owner>/<repo>
+[regex]::Match($h, '<meta property="og:image" content="([^"]+)"').Groups[1].Value
+```
+
+**踩过的两个坑**（别再犯）：
+1. **别用 `opengraph.githubassets.com` 自己拼 URL 去验** —— 那个端点的 hash 不是随便填的（填随机的会回落默认卡），
+   拿旧 hash 只会看到旧状态；**必须以页面 HTML 里的实际 URL 为准**。
+2. **验证判据不要自证**：我一度用"从被怀疑文件上读来的哈希"当期望值，等于拿文件跟它自己比，得出过错误结论。
+   图片类校验要用**独立判据**（尺寸 + 平均色：模板/默认卡是浅色 ~(241,239,237)，本项目卡片是深色 ~(24,28,46)）。
