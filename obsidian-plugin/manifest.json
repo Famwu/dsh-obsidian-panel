@@ -1,0 +1,9 @@
+{
+	"id": "dsh-bridge",
+	"name": "DSH Bridge",
+	"version": "0.1.0",
+	"minAppVersion": "1.4.0",
+	"description": "DSH(DeepSeek Harness)与 Obsidian 的联动桥：把笔记送给 DSH、打开工作台、查看知识库状态",
+	"author": "DSH",
+	"isDesktopOnly": true
+}

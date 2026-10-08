@@ -1,0 +1,6 @@
+# dsh-obsidian-panel 插件：侧栏 Obsidian 开关 + 内嵌分屏面板
+# name 用标准裸包名，由 profile 的 node_modules 解析（与 dsh-easyrewrite 等插件一致）。
+# 客户端半边由 package.json 的 exports["./client"] 定位，无需在此声明。
+- insert:
+    - id: dsh-obsidian-panel
+      name: dsh-obsidian-panel

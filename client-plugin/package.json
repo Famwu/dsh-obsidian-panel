@@ -1,0 +1,25 @@
+{
+  "name": "dsh-obsidian-panel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "DSH × Obsidian 内嵌面板：侧栏开关 + 分屏 + 自我进化 + 主题定制",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  }
+}

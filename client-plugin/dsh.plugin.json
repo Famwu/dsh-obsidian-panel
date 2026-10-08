@@ -1,0 +1,12 @@
+{
+  "name": "dsh-obsidian-panel",
+  "description": "DSH × Obsidian 内嵌面板：侧栏开关、分屏浏览、自我进化、主题定制（深/浅/随时间/自定义）",
+  "version": "0.1.0",
+  "entry": {
+    "name": "dsh-obsidian-panel",
+    "inject": []
+  },
+  "client": {
+    "platform": "web"
+  }
+}
