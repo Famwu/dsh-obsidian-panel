@@ -1,5 +1,8 @@
 # DSH × Obsidian · 第二大脑
 
+<a id="top" name="top"></a>
+**语言 / Language：** 简体中文（本页） · [English](#english)
+
 把 [DSH（DeepSeek Harness）](https://github.com/) 与 Obsidian 知识库接成一个**双向闭环**：
 DSH 把工作沉淀进你的知识库，知识库反过来在 DSH 每次开工前**补全你没说清的边界**，并把重复经验沉淀成技能。
 
@@ -128,3 +131,138 @@ GET  /api/evolution/archive     已完成（归档）的任务
 ## 许可
 
 [MIT](LICENSE) —— 可自由使用、修改、分发、商用，只需保留版权声明。
+
+---
+
+<a id="english" name="english"></a>
+
+# DSH × Obsidian · Second Brain
+
+**Language / 语言：** English (this section) · [简体中文](#top)
+
+Turn your Obsidian vault into a **second brain for [DSH (DeepSeek Harness)](https://github.com/)** — a **two-way loop**:
+DSH writes what it does back into your vault, and the vault in turn feeds DSH the context it was missing *before* each task starts, while lessons that repeat get distilled into reusable skills.
+
+> Design principle: **the vault is the memory, DSH is the brain; the bridge service only moves things around, it never thinks.**
+> The service only scans / indexes / retrieves / writes / queues — all reasoning and distillation happen on the DSH side. That is why it is zero-dependency, offline-capable and predictable.
+
+## Three channels
+
+| Direction | Entry point | What it does |
+|---|---|---|
+| **DSH → vault** | Right-click a session → "Export to Obsidian"; project archive; auto-export (sessions alive ≥ 2 days) | **Persist**: turn "what was done, what was concluded" into durable notes |
+| **vault → DSH** | Note list → "🧠 Hand off to DSH" → written into `.dsh/inbox/` | **Summon**: one click inside the vault makes DSH read that note and produce something |
+| **vault self-evolution** | Evolution tab → task queue → claim → execute → archived into a vault-visible folder (configurable via `evolution_log_folder`) | **Distill**: find gaps, fill them, write back, leave a trail |
+
+There is also **pre-work recall** `GET /api/recall?q=`: one call returns related notes / reusable skill cards / similar archived history / known gaps / vault conventions (tags, folders, frontmatter) — so DSH remembers before it acts.
+
+## Components
+
+| Part | Location | Notes |
+|---|---|---|
+| **Bridge service** | `workbench/server.mjs` | Zero-dependency Node (18+), `127.0.0.1:8777` by default; ships the document extractor `extract.py` (docx/pptx/xlsx/pdf) |
+| **DSH panel plugin** | `client-plugin/` | The side panel inside DSH: Notes / Edit / Structure / Evolution / Ingest |
+| **Obsidian plugin** | `obsidian-plugin/` | `dsh-bridge`: hand notes to DSH, open the panel, check vault status |
+
+Panel highlights: note list (search / tag filter / delete to trash / hand off to DSH), an Obsidian-style reader (properties block, tables, code blocks, wiki-links, **iframe video**), a new-note form, folder moves on the structure tab, trash (view / restore / delete / empty — **restores to the original folder**), the evolution task queue with archiving, and ingest (drop PDF/PPT/images/Office files → extract → add to the vault).
+
+## Install
+
+### 1. Bridge service
+Put `workbench/` inside **your vault**:
+```
+<your-vault>/.dsh/workbench/{server.mjs, extract.py}
+```
+Start it:
+```bash
+node <your-vault>/.dsh/workbench/server.mjs
+# defaults to 127.0.0.1:8777
+```
+Verify:
+```bash
+curl http://127.0.0.1:8777/api/ping
+# {"ok":true,"vault":"<your-vault>","port":8777}
+```
+
+**Start on boot (optional, Windows)** — once `server.mjs` is in place:
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/autostart.ps1 -Action install -Vault "<your-vault>"
+```
+(The script has no built-in default paths; pass `-Vault` or set `DSH_OBSIDIAN_VAULT`.)
+
+### 2. DSH panel plugin
+Put `client-plugin/` into DSH's plugin directory (your profile's `node_modules/dsh-obsidian-panel/`) and reload DSH.
+When the panel footer shows "● bridge service online", you are done.
+
+### 3. Obsidian plugin
+Put `obsidian-plugin/` into `<your-vault>/.obsidian/plugins/dsh-bridge/` and enable it in Obsidian's settings.
+The plugin **auto-detects** your vault root (no path to type); unusual setups can override it in the plugin settings.
+
+## Configuration
+
+**Environment variables (server side)**
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `DSH_OBSIDIAN_VAULT` | derived from the service file location | Vault root |
+| `DSH_OBSIDIAN_PORT` | `8777` | Bridge port |
+| `DSH_OBSIDIAN_SESSIONS` | `%USERPROFILE%\.dsh\sessions` | DSH session store (used by "Export to Obsidian") |
+
+**Settings (`GET/PUT /api/settings`)**
+
+| Key | Default | Meaning |
+|---|---|---|
+| `archive_folder` | `dsh-archive` | Where project archives / session exports land |
+| `evolution_log_folder` | `dsh-archive/evolution-log` | Where finished evolution tasks are archived (vault-visible) |
+| `attach_dir` | `attachments` | Ingested originals / embedded images are archived to `<vault>/<attach_dir>/` |
+| `ingest_default_dir` | `ingest-archive` | Default destination for ingested notes (long-term area; editable in the form) |
+| `skill_mirror_folder` | `dsh-skills` | One-way skill-card mirror: `<vault>/<skill_mirror_folder>/` |
+| `python_path` | `""` | Absolute path of the `extract.py` interpreter (empty = env var / PATH) |
+| `auto_export_sessions` | `false` | Auto-export sessions alive ≥ 2 days that were never exported |
+
+> Folder names are **deliberately not hard-coded**: the real names always come from your own `<vault>/.dsh/settings.json`, and the server reports the resolved values through the `effective` field of `GET /api/settings` (including `python_source`, handy when the interpreter cannot be found). As a result, the published code contains no personal folder names and no machine-specific paths.
+
+## Main API
+
+```
+GET  /api/ping                  Health check (returns vault and port)
+GET  /api/index                 Full vault index (notes / folders / attachments / tags)
+GET  /api/search?q=&tag=&limit= Search (multi-word AND first, OR fallback, ranked)
+GET  /api/recall?q=&limit=      Pre-work recall (notes + skills + archived history + gaps + conventions; each entry has score / used / record)
+POST /api/score                 Record one usage outcome (success / rework / fail) — makes "gets better with use" measurable
+GET  /api/score                 Usage summary (used / success / rework / fail / score / record)
+GET  /api/skills                Skill cards (local .dsh/skills and vault **/skills/*/SKILL.md, with source)
+GET  /api/note?path=            Read a note     PUT/POST write a note
+POST /api/archive               Archive a project / session memo
+POST /api/delete                Delete → move to trash (restorable to the original folder)
+GET  /api/trash                 Trash listing
+POST /api/trash/restore         Restore (original folder by default)
+POST /api/trash/purge           Delete one entry / empty the trash
+POST /api/move-dir              Move (and rename) a whole folder
+POST /api/ingest                Ingest: extract and stage    POST /api/ingest/save add to the vault
+POST /api/handoff               Hand a note to DSH (writes into .dsh/inbox/)
+GET  /api/inbox                 Inbox
+GET  /api/session/list          Exportable DSH sessions
+POST /api/session/export        Export a session as a memo note
+GET  /api/evolution             Evolution queue / log / gaps / skills
+GET  /api/evolution/archive     Finished (archived) tasks
+```
+
+## Repository layout
+
+```
+├── workbench/          # bridge service (zero-dependency Node) + extract.py
+├── client-plugin/      # DSH panel plugin
+├── obsidian-plugin/    # dsh-bridge (Obsidian plugin)
+├── tools/              # deploy / autostart scripts (for installation)
+└── docs/               # architecture, session import, packaging checklist, changelog
+```
+
+## Privacy
+
+**This repository contains no vault content.** Your notes, attachments and `.dsh/` data live only on your own disk.
+Maintainers: always run the path/secret scan described in `docs/PACKAGING.md` before committing.
+
+## License
+
+[MIT](LICENSE) — free to use, modify, distribute and sell; just keep the copyright notice.

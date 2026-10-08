@@ -5,6 +5,12 @@
 
 ## [0.4.0] - 2026-10-08
 
+> **English highlights** — Prompts / templates / checklists are now browsable *and manageable* in the panel
+> (create · edit · save · version history · delete, where deleting removes only the current version);
+> fixed the root cause of the chat area **jittering left and right** while the panel is open;
+> **light theme** text now meets **WCAG AA (4.5:1)** and shadows follow the theme (edge-only, identical strength in both themes);
+> and the release tree carries **no personal data** any more — folder names and interpreter paths are configuration, not hard-coded.
+
 ### 新增
 - **提示词 / 模板 / 检查清单（第四类进化对象）在面板上「可看可管」**：进化页新增「📝 提示词 / 模板 / 检查清单」区 ——
   类型筛选（全部 / 提示词 / 模板 / 检查清单，计数与列出的条目**同源现数**）、新建、编辑（编辑态名称只读：改名 = 新建 + 删旧，
